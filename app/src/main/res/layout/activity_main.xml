@@ -45,6 +45,13 @@
                 android:layout_height="150dp"
                 card_view:srcCompat="@drawable/label_printer" />
 
+            <Button
+                android:id="@+id/btn1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Button" />
+
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
