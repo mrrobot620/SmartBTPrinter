@@ -87,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("inputExtra", "");
         Gson gson = new Gson();
         String json = gson.toJson(csvDataMap);
-        intent.putExtra("grid" , json);
-        Log.d("MMM" , json);
+        intent.putExtra("grid", json);
+        Log.d("MMM", json);
         ContextCompat.startForegroundService(MainActivity.this, intent);
         Log.d("Created", "Worker Service Created");
     }
@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                     csvDataMap = readCSVFile(localFile);
                     csvDataManager.getInstance().loadCsvData(csvDataMap);
                     this.startService();
-                    Log.d("CSV1" , "csv written sucessfully");
+                    Log.d("CSV1", "csv written sucessfully");
                 })
                 .addOnFailureListener(exception -> {
                     Log.e("XXX", "File Download Failed: " + exception.getMessage());
