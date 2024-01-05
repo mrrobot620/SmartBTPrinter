@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.os.FileObserver;
@@ -16,9 +17,20 @@ import androidx.core.app.NotificationCompat;
 import com.example.tscdll.TSCActivity;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.LinkedHashMap;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class WorkerService
@@ -30,6 +42,13 @@ public class WorkerService
     private FileObserver observer;
     private final String watchFolder;
     private LinkedHashMap<String , String> gridMap;
+
+    private Connection  sqlConnection;
+
+    Connection conn = null;
+
+//    private String serverIp , port , databaseName , userName , password;
+
 
 
     public WorkerService() {
@@ -47,7 +66,6 @@ public class WorkerService
         Log.wtf("HI", "i am in");
         this.hostAddress = "";
     }
-
 
 
     public void onDestroy() {
@@ -70,7 +88,9 @@ public class WorkerService
         }
         Gson gson = new Gson();
         Type type = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
-        LinkedHashMap<String, String> gridMap = gson.fromJson(json, type);
+        gridMap = gson.fromJson(json, type);
+        Log.d("GridMap" , String.valueOf(gridMap));
+
 
         this.observer = new FileObserver(this.watchFolder, FileObserver.CLOSE_WRITE) {
 
@@ -82,7 +102,7 @@ public class WorkerService
                     stringBuilder.append(string2);
                     Log.d((String) string3, (String) stringBuilder.toString());
                     if (string2.endsWith(".prn")) {
-                        new Thread((Runnable) new PrintPrn("YKB" ,gridMap , string2, WorkerService.this.TscDll )).start();
+                        new Thread((Runnable) new PrintPrn("YKB" ,gridMap , string2, WorkerService.this.TscDll , sqlConnection)).start();
                         Log.d("XXX" , "Runnable Sent");
                     }
                     if (string2.endsWith(".zip")) {
@@ -108,5 +128,49 @@ public class WorkerService
         this.TscDll.closeport();
         return super.stopService(intent);
     }
+
+
+    private class ApiRequestAsyncTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            String bag = params[0];
+            String seal = params[1];
+            String grid = params[2];
+
+            String ipServer = "10.244.18.104";
+            String port = "8000";
+            String apiName = "add_bag";
+
+            try {
+                String apiUrl = "http://" + ipServer + ":" + port + "/api/" + apiName + "/";
+                Log.d("Url", apiUrl);
+                URL url = new URL(apiUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setDoOutput(true);
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                JSONObject jsonPayload = new JSONObject();
+                jsonPayload.put("bag_id", bag);
+                jsonPayload.put("seal_id", seal);
+                jsonPayload.put("grid_code", grid);
+                String payload = jsonPayload.toString();
+                OutputStream os = conn.getOutputStream();
+                os.write(payload.getBytes());
+                os.flush();
+                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    // Handle success response
+                    Log.d(TAG, "API request successful");
+                } else {
+                    // Handle failure response
+                    Log.e(TAG, "API request failed");
+                }
+                conn.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
 
 }
