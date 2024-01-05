@@ -1,37 +1,36 @@
 package com.mrrobot.smartbtprinter;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
-
 import com.example.tscdll.TSCActivity;
-import com.mrrobot.smartbtprinter.WorkerService;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.opencsv.CSVReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import com.google.gson.Gson;
 
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 23;
     private static final int BLUETOOTH_PERMISSION = 24;
     private static final int FINE_LOCATION_PERMISSION = 25;
@@ -39,9 +38,10 @@ public class MainActivity extends AppCompatActivity {
 
     private String hostAddress;
 
-    private Button btn;
+    String json;
 
-    private EditText text;
+
+    public Map<String, String> csvDataMap = new LinkedHashMap<>();
 
     private String getBluetoothDevice() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -64,18 +64,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Check and request permissions
         checkDrawOverlayPermission();
         checkBluetoothPermission();
         checkFineLocationPermission();
-
+        csvDataMap.clear();
+        downloadCSV();
         this.hostAddress = this.getBluetoothDevice();
         Log.wtf("App", "started");
-        this.startService();
+
     }
 
     protected void onDestroy() {
         Log.wtf("App", "Closed");
+        csvDataMap.clear();
         this.stopService();
         super.onDestroy();
     }
@@ -84,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, WorkerService.class);
         intent.putExtra("hostAddress", this.hostAddress);
         intent.putExtra("inputExtra", "");
+        Gson gson = new Gson();
+        String json = gson.toJson(csvDataMap);
+        intent.putExtra("grid" , json);
+        Log.d("MMM" , json);
         ContextCompat.startForegroundService(MainActivity.this, intent);
         Log.d("Created", "Worker Service Created");
     }
@@ -128,10 +133,8 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == SYSTEM_ALERT_WINDOW_PERMISSION) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-                // Permission granted, you can show the system alert window
                 showSystemAlertWindow();
             } else {
-                // Permission not granted, handle accordingly
                 Toast.makeText(this, "SYSTEM_ALERT_WINDOW permission not granted.", Toast.LENGTH_SHORT).show();
             }
         }
@@ -144,10 +147,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSystemAlertWindow() {
-        // Make sure you are using the correct context for displaying the window
         WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         if (windowManager != null) {
-            // Add your code to display the system alert window here
         }
     }
+
+
+    public void downloadCSV() {
+        StorageReference csvRef = FirebaseStorage.getInstance().getReference().child("grid.csv");
+        File localFile = new File(getExternalFilesDir(null), "grid800.csv");
+
+        csvRef.getFile(localFile)
+                .addOnSuccessListener(taskSnapshot -> {
+                    Log.d("XXX", "File Downloaded Successfully");
+                    csvDataMap = readCSVFile(localFile);
+                    csvDataManager.getInstance().loadCsvData(csvDataMap);
+                    this.startService();
+                    Log.d("CSV1" , "csv written sucessfully");
+                })
+                .addOnFailureListener(exception -> {
+                    Log.e("XXX", "File Download Failed: " + exception.getMessage());
+
+                });
+    }
+
+    private Map<String, String> readCSVFile(File csvFile) {
+        Map<String, String> csvDataMap = new LinkedHashMap<>();
+
+        try {
+            CSVReader csvReader = new CSVReader(new FileReader(csvFile));
+
+            String[] nextRecord;
+            while ((nextRecord = csvReader.readNext()) != null) {
+                if (nextRecord.length == 2) {
+                    csvDataMap.put(nextRecord[0], nextRecord[1]);
+                } else {
+                    Log.e("CSV", "Invalid CSV line: " + Arrays.toString(nextRecord));
+                }
+            }
+        } catch (Exception e) {
+
+        }
+        return csvDataMap;
+    }
+
+
 }

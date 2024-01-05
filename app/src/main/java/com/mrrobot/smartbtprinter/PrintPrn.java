@@ -2,12 +2,12 @@ package com.mrrobot.smartbtprinter;
 
 import android.os.Environment;
 import android.util.Log;
-
 import com.example.tscdll.TSCActivity;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
+import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,25 +19,23 @@ public class PrintPrn implements Runnable {
     private String filename;
     private final String watchFolder;
 
-    private final String bin;
-
     private final String site;
+    private LinkedHashMap<String ,String> gridMap;
+    private String realGrid1;
 
 
 
-
-    private PrintPrn(String bin, String site ,String from) {
-        this.bin = bin;
+    PrintPrn(String site) {
         this.site = site;
         File file;
         this.download_path = file = Environment.getExternalStoragePublicDirectory((String)Environment.DIRECTORY_DOWNLOADS);
         this.watchFolder = file.getAbsolutePath();
     }
 
-    PrintPrn(String value , String site ,String string2, TSCActivity tSCActivity) {
+    PrintPrn(String site ,LinkedHashMap<String ,String> gridMap , String string2,  TSCActivity tSCActivity) {
         this.site = site;
+        this.gridMap = gridMap;
         File file;
-        this.bin = value;
         this.download_path = file = Environment.getExternalStoragePublicDirectory((String)Environment.DIRECTORY_DOWNLOADS);
         this.watchFolder = file.getAbsolutePath();
         this.filename = string2;
@@ -132,14 +130,12 @@ public class PrintPrn implements Runnable {
 
                     String bagId1 = regexFinder("\\^BY2,3,53\\^FT32,165\\^BCN,,Y,N,N,A\\^FD(.*?)\\^FS", string2);
                     Log.d("AA", "Value of the BagID1: " + bagId1);
-
-
+                    
                     String bagId2 = regexFinder("\\^BY1,3,53\\^FT32,165\\^BCN,,Y,N,N,A\\^A0N,21,21\\^FD(.*?)\\^FS", string2);
                     Log.d("AA", "Value of the BagID2: " + bagId2);
 
-
                     String cDest = regexFinder("\\^FT24,222\\^A0N,34,33\\^CI28\\^FD(.*?)\\^FS", string2);
-                    Log.d("AA", "Value of the Complete Destination: " + cDest);
+                    Log.wtf("AA", "Value of the Complete Destination: " + cDest);
 
                     String bagA = regexFinder("\\^FT362,220\\^A0N,20,20\\^CI28\\^FD(.*?)\\^FS", string2);
                     Log.d("AA", "Value of the Bag Type: " + bagA);
@@ -150,19 +146,22 @@ public class PrintPrn implements Runnable {
                     String casperID = regexFinder("\\^FT240,252\\^A0N,20,20\\^CI28\\^FDCreated by :([^\\^]+)\\^FS", string2);
                     Log.d("AA", "Value of the Casper ID: " + casperID);
 
+                    String seller_info = regexFinder("\\^FT260,252\\^AON,20,20\\^CI28\\^FD(.*?)\\^FS" , string2);
+                    Log.d("AA" , "Value of the Seller-Info: " + seller_info);
 
-
+                    String realGrid = gridMap.get(cDest);
+                    Log.wtf("AA", "Value of the Complete Destination: " + cDest);
 
                     if (!(bagId1 == null)) {
-                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA~TA000~JSN^LT0^MNW^MTD^PON^PMN^LH0,0^JMA^PR5,5~SD30^JUS^LRN^CI27^PA0,1,1,0^XZ^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " +to+ "^FS^CI27^FT200,94^A0N,20,20^CI28^FD"+date+"^FS^CI27^FT72,100^A0N,20,20^CI28^FD#"+shipmentCount+"^FS^CI27^FT362,220^A0N,20,20^CI28^FD"+bagA+"^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :"+casperID+"^FS^CI27^FPH,1^FT120,222^A0N,25,25^CI28^FD"+cDest+"^FS^CI27^FT260,220^A0N,20,20^CI28^FD^FS^CI27^FT120,252^A0N,18,18^CI28^FD"+sealId+"^FS^CI27^BY2,3,53^FT32,165^BCN,,Y,N,N,A^FD"+bagId1+"^FS^FO16,8\n" +
-                                "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,218^A0N,20,20^FH\\^CI28^FD"+this.site+"^FS^CI27\n" +
-                                "^FT17,250^A0N,22,23^FH\\^CI28^FD"+this.bin+"^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^FO9,225^GFA,33,36,12,:Z64:eJz7/x8IPjCAwX8EaEBmAwDqexzW:2627^PQ1,0,1,Y^XZ");
+                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealId + "^FS^CI27^BY2,3,53^FT32,165^BCN,,Y,N,N,A^FD" + bagId1 + "^FS^FO16,8\n" +
+                                "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,235^A0N,17,17^FH\\^CI28^FD" + site + "^FS^CI27\n" +
+                                "^FT50,242^A0N,40,40^FH\\^CI28^FD" + realGrid + "^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^PQ1,0,1,Y^XZ");
                         this.TscDll.sendcommand(PrintString);
                     }
                     else {
-                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA~TA000~JSN^LT0^MNW^MTD^PON^PMN^LH0,0^JMA^PR5,5~SD30^JUS^LRN^CI27^PA0,1,1,0^XZ^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " +to+ "^FS^CI27^FT200,94^A0N,20,20^CI28^FD"+date+"^FS^CI27^FT72,100^A0N,20,20^CI28^FD#"+shipmentCount+"^FS^CI27^FT362,220^A0N,20,20^CI28^FD"+bagA+"^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :"+casperID+"^FS^CI27^FPH,1^FT120,222^A0N,25,25^CI28^FD"+cDest+"^FS^CI27^FT260,220^A0N,20,20^CI28^FD^FS^CI27^FT120,252^A0N,18,18^CI28^FD"+sealId+"^FS^CI27^BY1,3,53^FT32,165^BCN,,Y,N,N,A,A^A0N,21,21^FD"+bagId2+"^FS^FO16,8\n" +
-                                "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,218^A0N,20,20^FH\\^CI28^FD"+this.site+"^FS^CI27\n" +
-                                "^FT17,250^A0N,22,23^FH\\^CI28^FD"+this.bin+"^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^FO9,225^GFA,33,36,12,:Z64:eJz7/x8IPjCAwX8EaEBmAwDqexzW:2627^PQ1,0,1,Y^XZ");
+                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealId + "^FS^CI27^BY1,3,53^FT32,165^BCN,,Y,N,N,A^FD" + bagId2 + "^FS^FO16,8\n" +
+                                "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,235^A0N,17,17^FH\\^CI28^FD" + site + "^FS^CI27\n" +
+                                "^FT50,242^A0N,40,40^FH\\^CI28^FD" + realGrid + "^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^PQ1,0,1,Y^XZ");
                         this.TscDll.sendcommand(PrintString);
                     }
 
