@@ -130,47 +130,5 @@ public class WorkerService
     }
 
 
-    private class ApiRequestAsyncTask extends AsyncTask<String, Void, Void> {
-        @Override
-        protected Void doInBackground(String... params) {
-            String bag = params[0];
-            String seal = params[1];
-            String grid = params[2];
-
-            String ipServer = "10.244.18.104";
-            String port = "8000";
-            String apiName = "add_bag";
-
-            try {
-                String apiUrl = "http://" + ipServer + ":" + port + "/api/" + apiName + "/";
-                Log.d("Url", apiUrl);
-                URL url = new URL(apiUrl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                JSONObject jsonPayload = new JSONObject();
-                jsonPayload.put("bag_id", bag);
-                jsonPayload.put("seal_id", seal);
-                jsonPayload.put("grid_code", grid);
-                String payload = jsonPayload.toString();
-                OutputStream os = conn.getOutputStream();
-                os.write(payload.getBytes());
-                os.flush();
-                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    // Handle success response
-                    Log.d(TAG, "API request successful");
-                } else {
-                    // Handle failure response
-                    Log.e(TAG, "API request failed");
-                }
-                conn.disconnect();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
 
 }
