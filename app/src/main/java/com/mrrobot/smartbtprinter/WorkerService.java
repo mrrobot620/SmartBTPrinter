@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.os.FileObserver;
@@ -18,8 +17,13 @@ import com.example.tscdll.TSCActivity;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
-import org.json.JSONObject;
 
+
+import java.io.File;
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
+import java.sql.Connection;
+import org.json.JSONObject;
 import java.io.File;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
@@ -31,6 +35,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 
 public class WorkerService

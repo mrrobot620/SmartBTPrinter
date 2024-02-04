@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 import com.example.tscdll.TSCActivity;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.opencsv.CSVReader;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         checkDrawOverlayPermission();
         checkBluetoothPermission();
         checkFineLocationPermission();
+        FirebaseApp.initializeApp(this);
         csvDataMap.clear();
         downloadCSV();
         this.hostAddress = this.getBluetoothDevice();
@@ -154,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void downloadCSV() {
-        StorageReference csvRef = FirebaseStorage.getInstance().getReference().child("grid.csv");
+        StorageReference csvRef = FirebaseStorage.getInstance().getReference().child("dic_grid.csv");
         File localFile = new File(getExternalFilesDir(null), "grid800.csv");
 
         csvRef.getFile(localFile)
