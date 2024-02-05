@@ -41,6 +41,19 @@ public class WorkerService
 //    private String serverIp , port , databaseName , userName , password;
 
 
+    private boolean printingInProgress = false;
+
+    // ... existing code ...
+
+    public synchronized boolean isPrintingInProgress() {
+        return printingInProgress;
+    }
+
+    public synchronized void setPrintingInProgress(boolean printingInProgress) {
+        this.printingInProgress = printingInProgress;
+    }
+
+
 
     public WorkerService() {
         File file;
@@ -92,17 +105,32 @@ public class WorkerService
                     stringBuilder.append("onEvent: File Found : ");
                     stringBuilder.append(string2);
                     Log.d((String) string3, (String) stringBuilder.toString());
+
                     if (string2.endsWith(".prn")) {
-                        new Thread((Runnable) new PrintPrn("YKB" ,gridMap , string2, WorkerService.this.TscDll , sqlConnection)).start();
-                        Log.d("XXX" , "Runnable Sent");
+                        synchronized (WorkerService.this) {
+                            if (!WorkerService.this.isPrintingInProgress()) {
+                                WorkerService.this.setPrintingInProgress(true);
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        new PrintPrn("DIC", gridMap, string2, WorkerService.this.TscDll, sqlConnection).run();
+                                        WorkerService.this.setPrintingInProgress(false);
+
+                                    }
+                                }).start();
+                            } else {
+                                Log.d("XXX", "Printing in progress, skipping file: " + string2);
+                            }
+                        }
                     }
+
                     if (string2.endsWith(".zip")) {
                         Log.d("Zip", "Zip not supported");
                     }
                 }
             }
         };
-        PendingIntent pendingIntent = PendingIntent.getActivity((Context) this, (int) 0, (Intent) new Intent((Context) this, MainActivity.class), (int) 0 | PendingIntent.FLAG_IMMUTABLE);
+            PendingIntent pendingIntent = PendingIntent.getActivity((Context) this, (int) 0, (Intent) new Intent((Context) this, MainActivity.class), (int) 0 | PendingIntent.FLAG_IMMUTABLE);
         Notification notification = new NotificationCompat.Builder((Context) this, "NOTIFICATION_CHANNEL_ID").setContentText((CharSequence) this.hostAddress).setTicker((CharSequence) "Connected").setContentIntent(pendingIntent).build();
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel notificationChannel = new NotificationChannel("NOTIFICATION_CHANNEL_ID", (CharSequence) "NOTIFICATION_CHANNEL_NAME", NotificationManager.IMPORTANCE_DEFAULT);
