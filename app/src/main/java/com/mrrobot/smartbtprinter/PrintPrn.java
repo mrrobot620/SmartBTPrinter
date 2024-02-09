@@ -163,6 +163,7 @@ public class PrintPrn implements Runnable {
                         Log.d("DD" , site);
 
                     }
+
                 }
             } while (true);
         }
@@ -188,5 +189,6 @@ public class PrintPrn implements Runnable {
         return value;
     }
 
+//This cor commit
 
 }
