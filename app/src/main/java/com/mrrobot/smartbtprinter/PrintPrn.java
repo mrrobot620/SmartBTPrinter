@@ -1,6 +1,6 @@
 package com.mrrobot.smartbtprinter;
 
-import android.os.AsyncTask;
+
 import android.os.Environment;
 import android.util.Log;
 import com.example.tscdll.TSCActivity;
@@ -12,11 +12,6 @@ import java.sql.Connection;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import org.json.JSONObject;
-
 
 
 public class PrintPrn implements Runnable {
@@ -28,14 +23,13 @@ public class PrintPrn implements Runnable {
 
     private final String site;
     private LinkedHashMap<String ,String> gridMap;
+
+    private LinkedHashMap<String ,String> varMap;
     private String realGrid1;
 
     private Connection sqlConnection;
 
     private static final Object lock = new Object();
-
-
-
 
 
     PrintPrn(String site) {
@@ -45,9 +39,10 @@ public class PrintPrn implements Runnable {
         this.watchFolder = file.getAbsolutePath();
     }
 
-    PrintPrn(String site ,LinkedHashMap<String ,String> gridMap , String string2,  TSCActivity tSCActivity , Connection sqlConnection) {
+    PrintPrn(String site ,LinkedHashMap<String ,String> gridMap ,LinkedHashMap<String ,String> varMap , String string2,  TSCActivity tSCActivity , Connection sqlConnection) {
         this.site = site;
         this.gridMap = gridMap;
+        this.varMap = varMap;
         File file;
         this.download_path = file = Environment.getExternalStoragePublicDirectory((String)Environment.DIRECTORY_DOWNLOADS);
         this.watchFolder = file.getAbsolutePath();
@@ -131,23 +126,24 @@ public class PrintPrn implements Runnable {
                 if (string2.length() == 0) continue;
 
                 if (string2.endsWith("XZ")) {
-                    String from = regexFinder("From : ([A-Za-z0-9_]+)", string2);
-                    String to = regexFinder("To : ([A-Za-z0-9_]+)", string2);
-                    String date = regexFinder("\\^FT\\d+,\\d+\\^A0N,\\d+,\\d+\\^CI\\d+\\^FD(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d+)\\^FS", string2);
-                    String shipmentCount = regexFinder("#(\\d{1,3})", string2);
-                    String bagId1 = regexFinder("\\^BY2,3,53\\^FT32,165\\^BCN,,Y,N,N,A\\^FD(.*?)\\^FS", string2);
-                    String bagId2 = regexFinder("\\^BY1,3,53\\^FT32,165\\^BCN,,Y,N,N,A\\^A0N,21,21\\^FD(.*?)\\^FS", string2);
-                    String cDest = regexFinder("\\^FT24,222\\^A0N,34,33\\^CI28\\^FD(.*?)\\^FS", string2);
-                    String bagA = regexFinder("\\^FT362,220\\^A0N,20,20\\^CI28\\^FD(.*?)\\^FS", string2);
-                    String sealId = regexFinder("\\^FT24,252\\^A0N,20,20\\^CI28\\^FD(.*?)\\^FS", string2);
-                    String casperID = regexFinder("\\^FT240,252\\^A0N,20,20\\^CI28\\^FDCreated by :([^\\^]+)\\^FS", string2);
-                    String seller_info = regexFinder("\\^FT260,252\\^AON,20,20\\^CI28\\^FD(.*?)\\^FS", string2);
-                    Log.d("AA", "Value of the Seller-Info: " + seller_info);
+                    String from = regexFinder(varMap.get("from"), string2);
+                    String to = regexFinder(varMap.get("to"), string2);
+                    String date = regexFinder(varMap.get("date"), string2);
+                    String shipmentCount = regexFinder(varMap.get("shipmentCount"), string2);
+                    String bagId1 = regexFinder(varMap.get("bagId1"), string2);
+                    String bagId2 = regexFinder(varMap.get("bagId2"), string2);
+                    String cDest = regexFinder(varMap.get("cDest"), string2);
+                    String bagA = regexFinder(varMap.get("bagA"), string2);
+                    String sealID = regexFinder(varMap.get("sealId"), string2);
+                    String casperID = regexFinder(varMap.get("casperID"), string2);
+                    String seller_info = regexFinder(varMap.get("seller_info"), string2);
+                    String wildCard1 = regexFinder(varMap.get("wildCard1") , string2);
+                    String wildCard2 = regexFinder(varMap.get("wildCard2") , string2);
                     String realGrid = gridMap.get(to);
 
 
                     if (!(bagId1.isEmpty())) {
-                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealId + "^FS^CI27^BY2,3,53^FT32,165^BCN,,Y,N,N,A^FD" + bagId1 + "^FS^FO16,8\n" +
+                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealID + "^FS^CI27^BY2,3,53^FT32,165^BCN,,Y,N,N,A^FD" + bagId1 + "^FS^FO16,8\n" +
                                 "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,220^A0N,17,17^FH\\^CI28^FD" + site + "^FS^CI27\n" +
                                 "^FT18,250^A0N,27,27^FH\\^CI28^FD" + realGrid + "^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^PQ1,0,1,Y^XZ");
                         this.TscDll.sendcommand(PrintString);
@@ -155,7 +151,7 @@ public class PrintPrn implements Runnable {
                         Log.d("DD" ,  PrintString);
 
                     } else {
-                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealId + "^FS^CI27^BY1,3,53^FT32,165^BCN,,Y,N,N,A,A^A0N,21,21^FD" + bagId2 + "^FS^FO16,8\n" +
+                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealID + "^FS^CI27^BY1,3,53^FT32,165^BCN,,Y,N,N,A,A^A0N,21,21^FD" + bagId2 + "^FS^FO16,8\n" +
                                 "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,220^A0N,17,17^FH\\^CI28^FD" + site + "^FS^CI27\n" +
                                 "^FT18,250^A0N,27,27^FH\\^CI28^FD" + realGrid + "^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^PQ1,0,1,Y^XZ");
                         this.TscDll.sendcommand(PrintString);
@@ -163,7 +159,6 @@ public class PrintPrn implements Runnable {
                         Log.d("DD" , site);
 
                     }
-
                 }
             } while (true);
         }
@@ -188,7 +183,5 @@ public class PrintPrn implements Runnable {
         }
         return value;
     }
-
-//This cor commit
 
 }
