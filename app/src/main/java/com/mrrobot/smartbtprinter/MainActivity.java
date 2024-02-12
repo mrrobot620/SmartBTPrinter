@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         TextView selectedSite = findViewById(R.id.selectedSite);
         ImageView sucessTick = findViewById(R.id.greenTick);
         ImageView labelPrinter = findViewById(R.id.imageView2);
+        ImageView connectedPrinter = findViewById(R.id.connectedPrinter);
         checkDrawOverlayPermission();
         checkBluetoothPermission();
         checkFineLocationPermission();
@@ -110,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setOnClickListener(v -> {
             String siteName = materialSpinner.getText().toString();
             site = retrieveSite(siteName);
-            downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton);
+            downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton , connectedPrinter);
             this.hostAddress = this.getBluetoothDevice();
             Log.wtf("App", "started");
         });
@@ -223,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void downloadCSV(String siteName , AutoCompleteTextView materialSpinner , TextInputLayout layout1 , TextView selectedSite , ImageView tick , ImageView printerImg , Button btn) {
+    public void downloadCSV(String siteName , AutoCompleteTextView materialSpinner , TextInputLayout layout1 , TextView selectedSite , ImageView tick , ImageView printerImg , Button btn , ImageView connectedPrinter) {
         StorageReference csvRef = FirebaseStorage.getInstance().getReference().child(siteName + ".csv");
         File localFile = new File(getExternalFilesDir(null), "grid800.csv");
         csvRef.getFile(localFile)
@@ -241,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                     selectedSite.setText(siteName);
                     tick.setVisibility(View.VISIBLE);
+                    connectedPrinter.setVisibility(View.VISIBLE);
                     selectedSite.setVisibility(View.VISIBLE);
                     Log.d("CSV1", "csv written sucessfully");
                 })

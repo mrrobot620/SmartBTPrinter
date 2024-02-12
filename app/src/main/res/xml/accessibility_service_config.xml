@@ -2,7 +2,6 @@
 
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAllMask"
-    android:packageNames="com.mrrobot.smartbagging, com.android.chrome"
     android:canRequestEnhancedWebAccessibility="true"
     android:accessibilityFlags="flagReportViewIds|flagIncludeNotImportantViews"
     android:accessibilityFeedbackType="feedbackSpoken"
