@@ -66,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
 
     public String bagTemplateB;
 
+    public String site;
+
+
 
 
     private String getBluetoothDevice() {
@@ -106,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         submitButton.setOnClickListener(v -> {
             String siteName = materialSpinner.getText().toString();
+            site = retrieveSite(siteName);
             downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton);
             this.hostAddress = this.getBluetoothDevice();
             Log.wtf("App", "started");
@@ -155,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("vars" , vars);
         intent.putExtra("bagTemplateA" , bagTemplateA);
         intent.putExtra("bagTemplateB" , bagTemplateB);
+        intent.putExtra("site" , site);
         Log.d("MMM", json);
         ContextCompat.startForegroundService(MainActivity.this, intent);
         Log.d("Created", "Worker Service Created");
@@ -219,7 +224,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void downloadCSV(String siteName , AutoCompleteTextView materialSpinner , TextInputLayout layout1 , TextView selectedSite , ImageView tick , ImageView printerImg , Button btn) {
-
         StorageReference csvRef = FirebaseStorage.getInstance().getReference().child(siteName + ".csv");
         File localFile = new File(getExternalFilesDir(null), "grid800.csv");
         csvRef.getFile(localFile)
@@ -407,5 +411,21 @@ public class MainActivity extends AppCompatActivity {
         return stringBuilder.toString();
     }
 
+    public String retrieveSite(String siteName) {
+        String[] parts = siteName.split("_");
+
+        if (parts.length >= 2) {
+            String lastPart = parts[parts.length - 1].trim();
+            String[] words = lastPart.split("\\s+");
+
+            if (words.length >= 3) {
+                return words[words.length - 3] + " " + words[words.length - 2] + " " + words[words.length - 1];
+            } else {
+                return lastPart;
+            }
+        } else {
+            return siteName;
+        }
+    }
 
 }
