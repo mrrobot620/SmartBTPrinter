@@ -37,13 +37,6 @@ public class WorkerService
 
     private LinkedHashMap<String , String> varMap;
 
-    private Connection  sqlConnection;
-
-    Connection conn = null;
-
-//    private String serverIp , port , databaseName , userName , password;
-
-
     private boolean printingInProgress = false;
 
     // ... existing code ...
@@ -103,10 +96,8 @@ public class WorkerService
 
         String bagTemplateA = intent.getStringExtra("bagTemplateA");
         String bagTemplateB = intent.getStringExtra("bagTemplateB");
-
         Log.d("XXX" , "A in Service: " + bagTemplateA);
         Log.d("XXX" , "B in Service: " + bagTemplateB);
-
 
         this.observer = new FileObserver(this.watchFolder, FileObserver.CLOSE_WRITE) {
 
@@ -125,7 +116,7 @@ public class WorkerService
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        new PrintPrn("DIC", gridMap, varMap, string2, WorkerService.this.TscDll, sqlConnection).run();
+                                        new PrintPrn("DIC", gridMap, varMap, string2, WorkerService.this.TscDll, bagTemplateA , bagTemplateB).run();
                                         WorkerService.this.setPrintingInProgress(false);
                                     }
                                 }).start();
