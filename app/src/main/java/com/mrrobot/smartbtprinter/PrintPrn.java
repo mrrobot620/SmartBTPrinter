@@ -9,13 +9,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class PrintPrn implements Runnable {
     private static final String TAG = "PrintPrn";
+
     private TSCActivity TscDll;
     private final File download_path;
     private String filename;
@@ -25,11 +28,26 @@ public class PrintPrn implements Runnable {
     private LinkedHashMap<String ,String> gridMap;
 
     private LinkedHashMap<String ,String> varMap;
-    private String realGrid1;
-
-    private Connection sqlConnection;
+    private String bagTemplateA;
+    private String bagTemplateB;
 
     private static final Object lock = new Object();
+
+
+    String from;
+    String to;
+    String date;
+    String shipmentCount;
+    String bagId1;
+    String bagId2;
+    String cDest;
+    String bagA;
+    String sealID;
+    String casperID;
+    String seller_info;
+    String wildCard1;
+    String wildCard2;
+    String realGrid ;
 
 
     PrintPrn(String site) {
@@ -39,7 +57,7 @@ public class PrintPrn implements Runnable {
         this.watchFolder = file.getAbsolutePath();
     }
 
-    PrintPrn(String site ,LinkedHashMap<String ,String> gridMap ,LinkedHashMap<String ,String> varMap , String string2,  TSCActivity tSCActivity , Connection sqlConnection) {
+    PrintPrn(String site ,LinkedHashMap<String ,String> gridMap ,LinkedHashMap<String ,String> varMap , String string2,  TSCActivity tSCActivity , String bagTemplateA , String bagTemplateB) {
         this.site = site;
         this.gridMap = gridMap;
         this.varMap = varMap;
@@ -48,7 +66,9 @@ public class PrintPrn implements Runnable {
         this.watchFolder = file.getAbsolutePath();
         this.filename = string2;
         this.TscDll = tSCActivity;
-        this.sqlConnection = sqlConnection;
+        this.bagTemplateA = bagTemplateA;
+        this.bagTemplateB = bagTemplateB;
+
     }
 
     private void readfile(String string2) {
@@ -143,21 +163,10 @@ public class PrintPrn implements Runnable {
 
 
                     if (!(bagId1.isEmpty())) {
-                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealID + "^FS^CI27^BY2,3,53^FT32,165^BCN,,Y,N,N,A^FD" + bagId1 + "^FS^FO16,8\n" +
-                                "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,220^A0N,17,17^FH\\^CI28^FD" + site + "^FS^CI27\n" +
-                                "^FT18,250^A0N,27,27^FH\\^CI28^FD" + realGrid + "^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^PQ1,0,1,Y^XZ");
-                        this.TscDll.sendcommand(PrintString);
-                        Log.d("DD" , site);
-                        Log.d("DD" ,  PrintString);
+                        generatePrintCommand(bagTemplateA);
 
                     } else {
-                        String PrintString = ("\u0010CT~~CD,~CC^~CT~^XA^MMT^PW446^LL264^LS0^FT200,44^A0N,20,20^CI28^FDFrom : " + from + "^FS^CI27^FT200,69^A0N,20,20^CI28^FDTo : " + to + "^FS^CI27^FT200,94^A0N,20,20^CI28^FD" + date + "^FS^CI27^FT72,100^A0N,20,20^CI28^FD#" + shipmentCount + "^FS^CI27^FT375,222^A0N,20,20^CI28^FD" + bagA + "^FS^CI27^FT270,252^A0N,17,17^CI28^FDCreated by :" + casperID + "^FS^CI27^FPH,1^FT110,222^A0N,27,27^CI28^FD" + cDest + "^FS^CI27^FT230,222^A0N,19,19^CI28^FD" + seller_info + "^FS^CI27^FT270,220^A0N,20,20^CI28^FD^FS^CI27^FT110,252^A0N,18,18^CI28^FD" + sealID + "^FS^CI27^BY1,3,53^FT32,165^BCN,,Y,N,N,A,A^A0N,21,21^FD" + bagId2 + "^FS^FO16,8\n" +
-                                "^GFA,645,1440,20,:Z64:eJzVkz9Lw0AYxi+WQ1E0dQjtYMG5Djp2awS7t5Cji/kOFezepRB06FcIuJSb/AaJg+BooW49CLoUBbvGVnK+l17SS8Q/o77Lvffyy3PPc0kQ+ge10UvbzaTFZjpLWz1IZ2mrcMa3nL/S87/jfnvuD3ruF/62OI/0QH/mnE897nEOz2DGGPYrN7Dc26zCGAjqAAyC+hUsIZec0SZtbBoaaZMWacPOTDjeU7nK2LL7vo0si4zYiWGPzdhQfRBE4KDwNkfo0F0aMvDxOXTa2bn0p/eAe3mPuTDegp6PKvh2LLjRROaNOR5muFiPNAXXsmR0fepwwR1yvtJ7eGCY3SObsZWeyAEcl1zsr9vtCn+wnHUSf+L+HqOUi/UYG2P/VGMnDaG3LfWGehAV5qiwUPyBKaJZS3/rMi+8N68XZvMi8T4m2bzA1Z8Szk31jOMO3F/q785xBoE+jZxLJS8h2McjRkg2b1BYqDkMApyptWBZ3d+SC1VOfC99X5uo97dGKR24iB7wuTuUXFLabhHlC3A6pPRCxUCWjUiWm3uR97yfGWnNUqtk5vRms5dXSh31WNRoNpr5c6u16lF+VoTKz8q1ci0/2yvufdLbud4J8jNsKn+drDV3083P/kB9AJctGes=:8B5B^FT18,220^A0N,17,17^FH\\^CI28^FD" + site + "^FS^CI27\n" +
-                                "^FT18,250^A0N,27,27^FH\\^CI28^FD" + realGrid + "^FS^CI27^FO9,194^GB91,65,3^FS^FO9,225^FT245,225^A0N,17,18^FH\\^CI28^FD ^FS^CI27^PQ1,0,1,Y^XZ");
-                        this.TscDll.sendcommand(PrintString);
-                        Log.d("DD" ,  PrintString);
-                        Log.d("DD" , site);
-
+                        generatePrintCommand(bagTemplateB);
                     }
                 }
             } while (true);
@@ -183,5 +192,34 @@ public class PrintPrn implements Runnable {
         }
         return value;
     }
+
+
+    public void generatePrintCommand(String template){
+        Map<String , String> values = new HashMap<>();
+        values.put("from" , from);
+        values.put("to" , to);
+        values.put("date" , date);
+        values.put("shipmentCount" , shipmentCount);
+        values.put("bagId1", bagId1);
+        values.put("bagId2" , bagId2);
+        values.put("cDest" , cDest);
+        values.put("bagA", bagA);
+        values.put("sealID" , sealID);
+        values.put("casperID", casperID);
+        values.put("seller_info", seller_info);
+        values.put("wildCard1" ,wildCard1);
+        values.put("wildCard2" , wildCard2);
+        values.put("realGrid"  , realGrid);
+
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            template = template.replace("%{" + entry.getKey() + "}", entry.getValue());
+        }
+        this.TscDll.sendcommand(template);
+        Log.d("DD" , site);
+        Log.d("DD" ,  template);
+
+    }
+
+
 
 }
