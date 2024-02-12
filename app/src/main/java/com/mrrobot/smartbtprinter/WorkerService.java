@@ -37,9 +37,9 @@ public class WorkerService
 
     private LinkedHashMap<String , String> varMap;
 
-    private boolean printingInProgress = false;
+    private String site;
 
-    // ... existing code ...
+    private boolean printingInProgress = false;
 
     public synchronized boolean isPrintingInProgress() {
         return printingInProgress;
@@ -94,10 +94,13 @@ public class WorkerService
         varMap = gson.fromJson(vars , type);
         Log.d("VarMap in Service" , String.valueOf(varMap));
 
+
         String bagTemplateA = intent.getStringExtra("bagTemplateA");
         String bagTemplateB = intent.getStringExtra("bagTemplateB");
+        site = intent.getStringExtra("site");
         Log.d("XXX" , "A in Service: " + bagTemplateA);
         Log.d("XXX" , "B in Service: " + bagTemplateB);
+        Log.d("XXX" , "SiteName in Service: " + site);
 
         this.observer = new FileObserver(this.watchFolder, FileObserver.CLOSE_WRITE) {
 
@@ -116,7 +119,7 @@ public class WorkerService
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        new PrintPrn("DIC", gridMap, varMap, string2, WorkerService.this.TscDll, bagTemplateA , bagTemplateB).run();
+                                        new PrintPrn(site, gridMap, varMap, string2, WorkerService.this.TscDll, bagTemplateA , bagTemplateB).run();
                                         WorkerService.this.setPrintingInProgress(false);
                                     }
                                 }).start();

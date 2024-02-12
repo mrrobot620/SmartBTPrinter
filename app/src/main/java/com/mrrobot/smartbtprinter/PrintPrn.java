@@ -1,13 +1,20 @@
 package com.mrrobot.smartbtprinter;
 
 
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import com.example.tscdll.TSCActivity;
+
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.OutputStream;
 import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,22 +39,6 @@ public class PrintPrn implements Runnable {
     private String bagTemplateB;
 
     private static final Object lock = new Object();
-
-
-    String from;
-    String to;
-    String date;
-    String shipmentCount;
-    String bagId1;
-    String bagId2;
-    String cDest;
-    String bagA;
-    String sealID;
-    String casperID;
-    String seller_info;
-    String wildCard1;
-    String wildCard2;
-    String realGrid ;
 
 
     PrintPrn(String site) {
@@ -154,19 +145,21 @@ public class PrintPrn implements Runnable {
                     String bagId2 = regexFinder(varMap.get("bagId2"), string2);
                     String cDest = regexFinder(varMap.get("cDest"), string2);
                     String bagA = regexFinder(varMap.get("bagA"), string2);
-                    String sealID = regexFinder(varMap.get("sealId"), string2);
+                    String sealID = regexFinder(varMap.get("sealID"), string2);
                     String casperID = regexFinder(varMap.get("casperID"), string2);
                     String seller_info = regexFinder(varMap.get("seller_info"), string2);
                     String wildCard1 = regexFinder(varMap.get("wildCard1") , string2);
                     String wildCard2 = regexFinder(varMap.get("wildCard2") , string2);
                     String realGrid = gridMap.get(to);
 
-
                     if (!(bagId1.isEmpty())) {
-                        generatePrintCommand(bagTemplateA);
-
+                        Log.d("XXX" , "Template A");
+                        generatePrintCommand(bagTemplateA , to , from , date , shipmentCount , bagId1 , bagId2 , cDest , bagA , sealID , casperID , seller_info , wildCard1 , wildCard2 , realGrid );
+                        new ApiRequestAsyncTask().execute(bagId1 , sealID , realGrid);
                     } else {
-                        generatePrintCommand(bagTemplateB);
+                        Log.d("XXX" , "Template B");
+                        generatePrintCommand(bagTemplateB , to , from , date , shipmentCount , bagId1 , bagId2 , cDest , bagA , sealID , casperID , seller_info , wildCard1 , wildCard2 , realGrid );
+                        new ApiRequestAsyncTask().execute(bagId2, sealID , realGrid);
                     }
                 }
             } while (true);
@@ -194,7 +187,7 @@ public class PrintPrn implements Runnable {
     }
 
 
-    public void generatePrintCommand(String template){
+    public void generatePrintCommand(String template , String from , String to ,  String date , String shipmentCount , String bagId1 , String bagId2 , String cDest , String bagA , String sealID , String casperID , String seller_info , String wildCard1 , String wildCard2 , String realGrid){
         Map<String , String> values = new HashMap<>();
         values.put("from" , from);
         values.put("to" , to);
@@ -210,16 +203,58 @@ public class PrintPrn implements Runnable {
         values.put("wildCard1" ,wildCard1);
         values.put("wildCard2" , wildCard2);
         values.put("realGrid"  , realGrid);
+        values.put("site" , site);
 
         for (Map.Entry<String, String> entry : values.entrySet()) {
-            template = template.replace("%{" + entry.getKey() + "}", entry.getValue());
+            if (entry.getValue() != null) {
+                template = template.replace("%{" + entry.getKey() + "}", entry.getValue());
+            } else {
+                Log.w("XXX", "Value for key " + entry.getKey() + " is null");
+            }
         }
         this.TscDll.sendcommand(template);
         Log.d("DD" , site);
         Log.d("DD" ,  template);
-
     }
 
-
+    private class ApiRequestAsyncTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            String bag = params[0];
+            String seal = params[1];
+            String grid = params[2];
+            String apiUrl = gridMap.get("apiUrl");
+            if (!(apiUrl == null)) {
+                try {
+                    Log.d("Url", apiUrl);
+                    URL url = new URL(apiUrl);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setDoOutput(true);
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    JSONObject jsonPayload = new JSONObject();
+                    jsonPayload.put("bag_id", bag);
+                    jsonPayload.put("seal_id", seal);
+                    jsonPayload.put("grid_code", grid);
+                    String payload = jsonPayload.toString();
+                    OutputStream os = conn.getOutputStream();
+                    os.write(payload.getBytes());
+                    os.flush();
+                    if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        Log.d(TAG, "API request successful");
+                    } else {
+                        Log.e(TAG, "API request failed");
+                    }
+                    conn.disconnect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            } else {
+                Log.d("XXX" , "BagTrac Api not exists for this site");
+            }
+            return null;
+        }
+    }
 
 }
