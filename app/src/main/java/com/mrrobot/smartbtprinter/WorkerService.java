@@ -18,24 +18,11 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 
-
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.sql.Connection;
-import org.json.JSONObject;
-import java.io.File;
-import java.io.OutputStream;
-import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.LinkedHashMap;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import java.util.Objects;
 
 
 public class WorkerService
@@ -47,6 +34,8 @@ public class WorkerService
     private FileObserver observer;
     private final String watchFolder;
     private LinkedHashMap<String , String> gridMap;
+
+    private LinkedHashMap<String , String> varMap;
 
     private Connection  sqlConnection;
 
@@ -88,7 +77,7 @@ public class WorkerService
 
     public void onDestroy() {
         this.observer.stopWatching();
-        this.TscDll.closeport();
+//        this.TscDll.closeport();
         super.onDestroy();
     }
 
@@ -98,6 +87,7 @@ public class WorkerService
         intent.getStringExtra("inputExtra");
         this.hostAddress = string2 = intent.getStringExtra("hostAddress");
         String json = intent.getStringExtra("grid");
+        String vars = intent.getStringExtra("vars");
         if (!string2.isEmpty()) {
             TSCActivity tSCActivity;
             this.TscDll = tSCActivity = new TSCActivity();
@@ -107,7 +97,15 @@ public class WorkerService
         Gson gson = new Gson();
         Type type = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
         gridMap = gson.fromJson(json, type);
-        Log.d("GridMap" , String.valueOf(gridMap));
+        Log.d("GridMap in Service" , String.valueOf(gridMap));
+        varMap = gson.fromJson(vars , type);
+        Log.d("VarMap in Service" , String.valueOf(varMap));
+
+        String bagTemplateA = intent.getStringExtra("bagTemplateA");
+        String bagTemplateB = intent.getStringExtra("bagTemplateB");
+
+        Log.d("XXX" , "A in Service: " + bagTemplateA);
+        Log.d("XXX" , "B in Service: " + bagTemplateB);
 
 
         this.observer = new FileObserver(this.watchFolder, FileObserver.CLOSE_WRITE) {
@@ -127,9 +125,8 @@ public class WorkerService
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        new PrintPrn("DIC", gridMap, string2, WorkerService.this.TscDll, sqlConnection).run();
+                                        new PrintPrn("DIC", gridMap, varMap, string2, WorkerService.this.TscDll, sqlConnection).run();
                                         WorkerService.this.setPrintingInProgress(false);
-
                                     }
                                 }).start();
                             } else {
