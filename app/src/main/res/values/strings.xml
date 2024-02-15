@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Smart BT Printer</string>
-    <string name="app_d">Enable this to use new Smart BT Printer for Auto Grid Printing</string>
+    <string name="app_d">Enable this to get the Live Error Detection</string>
 </resources>

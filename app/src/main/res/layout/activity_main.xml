@@ -11,6 +11,7 @@
     android:gravity="center"
     android:id="@+id/MainView"
     tools:context=".MainActivity"
+    android:background="@color/fkblue"
     tools:ignore="InvalidId">
 
     <ImageView
@@ -43,7 +44,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp"
                 android:layout_marginBottom="20dp"
-                card_view:srcCompat="@drawable/label_printer" />
+                card_view:srcCompat="@drawable/print" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/autoCompleteTextView1"
@@ -70,8 +71,15 @@
                 android:scaleType="fitCenter"
                 android:visibility="gone"
                 card_view:srcCompat="@drawable/baseline_check_circle_24"
-                android:layout_height="100dp"/>
+                android:layout_height="40dp"/>
 
+            <ImageView
+                android:id="@+id/connectedPrinter"
+                android:layout_width="match_parent"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                card_view:srcCompat="@drawable/print2"
+                android:layout_height="100dp"/>
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/selectedSite"

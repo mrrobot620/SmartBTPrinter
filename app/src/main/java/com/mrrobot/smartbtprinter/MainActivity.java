@@ -2,13 +2,18 @@ package com.mrrobot.smartbtprinter;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -68,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
 
     public String site;
 
+    private ActivityResultLauncher<String> storagePermissionLauncher;
+
 
 
 
@@ -98,8 +105,20 @@ public class MainActivity extends AppCompatActivity {
         TextView selectedSite = findViewById(R.id.selectedSite);
         ImageView sucessTick = findViewById(R.id.greenTick);
         ImageView labelPrinter = findViewById(R.id.imageView2);
+        ImageView connectedPrinter = findViewById(R.id.connectedPrinter);
+        storagePermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+
+                    } else {
+
+                    }
+                }
+        );
         checkDrawOverlayPermission();
         checkBluetoothPermission();
+        checkStoragePermission();
         checkFineLocationPermission();
         FirebaseApp.initializeApp(this);
         csvDataMap.clear();
@@ -110,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setOnClickListener(v -> {
             String siteName = materialSpinner.getText().toString();
             site = retrieveSite(siteName);
-            downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton);
+            downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton , connectedPrinter);
             this.hostAddress = this.getBluetoothDevice();
             Log.wtf("App", "started");
         });
@@ -182,6 +201,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void checkStoragePermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED) {
+
+        } else {
+
+            storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+
+
     private void checkFineLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_PERMISSION);
@@ -223,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void downloadCSV(String siteName , AutoCompleteTextView materialSpinner , TextInputLayout layout1 , TextView selectedSite , ImageView tick , ImageView printerImg , Button btn) {
+    public void downloadCSV(String siteName , AutoCompleteTextView materialSpinner , TextInputLayout layout1 , TextView selectedSite , ImageView tick , ImageView printerImg , Button btn , ImageView connectedPrinter) {
         StorageReference csvRef = FirebaseStorage.getInstance().getReference().child(siteName + ".csv");
         File localFile = new File(getExternalFilesDir(null), "grid800.csv");
         csvRef.getFile(localFile)
@@ -241,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                     selectedSite.setText(siteName);
                     tick.setVisibility(View.VISIBLE);
+                    connectedPrinter.setVisibility(View.VISIBLE);
                     selectedSite.setVisibility(View.VISIBLE);
                     Log.d("CSV1", "csv written sucessfully");
                 })
