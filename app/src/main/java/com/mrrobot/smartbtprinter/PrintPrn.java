@@ -1,6 +1,7 @@
 package com.mrrobot.smartbtprinter;
 
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
@@ -48,7 +49,7 @@ public class PrintPrn implements Runnable {
         this.watchFolder = file.getAbsolutePath();
     }
 
-    PrintPrn(String site ,LinkedHashMap<String ,String> gridMap ,LinkedHashMap<String ,String> varMap , String string2,  TSCActivity tSCActivity , String bagTemplateA , String bagTemplateB) {
+    PrintPrn(String site , LinkedHashMap<String ,String> gridMap , LinkedHashMap<String ,String> varMap , String string2, TSCActivity tSCActivity , String bagTemplateA , String bagTemplateB) {
         this.site = site;
         this.gridMap = gridMap;
         this.varMap = varMap;
@@ -59,7 +60,6 @@ public class PrintPrn implements Runnable {
         this.TscDll = tSCActivity;
         this.bagTemplateA = bagTemplateA;
         this.bagTemplateB = bagTemplateB;
-
     }
 
     private void readfile(String string2) {

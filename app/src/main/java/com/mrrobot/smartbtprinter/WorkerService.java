@@ -119,7 +119,7 @@ public class WorkerService
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        new PrintPrn(site, gridMap, varMap, string2, WorkerService.this.TscDll, bagTemplateA , bagTemplateB).run();
+                                        new PrintPrn(site, gridMap, varMap, string2, WorkerService.this.TscDll, bagTemplateA , bagTemplateB ).run();
                                         WorkerService.this.setPrintingInProgress(false);
                                     }
                                 }).start();
@@ -152,7 +152,6 @@ public class WorkerService
         this.TscDll.closeport();
         return super.stopService(intent);
     }
-
 
 
 }

@@ -2,10 +2,14 @@ package com.mrrobot.smartbtprinter;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -69,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
 
     public String site;
 
+    private ActivityResultLauncher<String> storagePermissionLauncher;
+
 
 
 
@@ -100,8 +106,19 @@ public class MainActivity extends AppCompatActivity {
         ImageView sucessTick = findViewById(R.id.greenTick);
         ImageView labelPrinter = findViewById(R.id.imageView2);
         ImageView connectedPrinter = findViewById(R.id.connectedPrinter);
+        storagePermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+
+                    } else {
+
+                    }
+                }
+        );
         checkDrawOverlayPermission();
         checkBluetoothPermission();
+        checkStoragePermission();
         checkFineLocationPermission();
         FirebaseApp.initializeApp(this);
         csvDataMap.clear();
@@ -183,6 +200,20 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.BLUETOOTH}, BLUETOOTH_PERMISSION);
         }
     }
+
+    private void checkStoragePermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED) {
+
+        } else {
+
+            storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+
 
     private void checkFineLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
