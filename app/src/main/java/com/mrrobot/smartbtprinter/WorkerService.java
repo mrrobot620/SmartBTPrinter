@@ -90,9 +90,9 @@ public class WorkerService
         Gson gson = new Gson();
         Type type = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
         gridMap = gson.fromJson(json, type);
-        Log.d("GridMap in Service" , String.valueOf(gridMap));
+        Log.d("GridMap in Service" , "GridMap in Service" + gridMap);
         varMap = gson.fromJson(vars , type);
-        Log.d("VarMap in Service" , String.valueOf(varMap));
+        Log.d("VarMap in Service" , "VarMap in Service" + varMap);
 
 
         String bagTemplateA = intent.getStringExtra("bagTemplateA");
