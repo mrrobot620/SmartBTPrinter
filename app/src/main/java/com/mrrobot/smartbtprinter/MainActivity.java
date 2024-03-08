@@ -127,36 +127,42 @@ public class MainActivity extends AppCompatActivity {
         getVars();
 
         submitButton.setOnClickListener(v -> {
+
             String siteName = materialSpinner.getText().toString();
             site = retrieveSite(siteName);
-            downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton , connectedPrinter);
+
+            String path = siteName + "/bagType1.txt";
+            String path2 = siteName + "/bagType2.txt";
+
+            Log.d("XXX" , "path 1 is:  " + path);
+            downloadFile(path, new FileDownloadCallback()  {
+                @Override
+                public void onSuccess(String fileContents) {
+                    bagTemplateA = fileContents;
+                    Log.d("XXX" , "Bag Template A: " + bagTemplateA);
+                }
+                @Override
+                public void onFailure(Exception exception) {
+                    Log.e("XXX"  , "Error Downloading File" + exception);
+                }
+            });
+
+            downloadFile(path2, new FileDownloadCallback() {
+                @Override
+                public void onSuccess(String fileContents) {
+                    bagTemplateB = fileContents;
+                    Log.d("XXX" , "Bag Template B: " + bagTemplateB);
+                }
+                @Override
+                public void onFailure(Exception exception) {
+                    Log.e("XXX"  , "Error Downloading File template B: " + exception);
+                }
+            });
             this.hostAddress = this.getBluetoothDevice();
+            downloadCSV(siteName , materialSpinner , layout1 , selectedSite , sucessTick , labelPrinter , submitButton , connectedPrinter);
             Log.wtf("App", "started");
         });
 
-        downloadFile("prn_templates/bagType1.txt", new FileDownloadCallback() {
-            @Override
-            public void onSuccess(String fileContents) {
-                bagTemplateA = fileContents;
-                Log.d("XXX" , "Bag Template A: " + bagTemplateA);
-            }
-            @Override
-            public void onFailure(Exception exception) {
-                Log.e("XXX"  , "Error Downloading File" + exception);
-            }
-        });
-
-        downloadFile("prn_templates/bagType2.txt", new FileDownloadCallback() {
-            @Override
-            public void onSuccess(String fileContents) {
-                bagTemplateB = fileContents;
-                Log.d("XXX" , "Bag Template B: " + bagTemplateB);
-            }
-            @Override
-            public void onFailure(Exception exception) {
-                Log.e("XXX"  , "Error Downloading File template B: " + exception);
-            }
-        });
     }
 
     protected void onDestroy() {
@@ -255,9 +261,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public void downloadCSV(String siteName , AutoCompleteTextView materialSpinner , TextInputLayout layout1 , TextView selectedSite , ImageView tick , ImageView printerImg , Button btn , ImageView connectedPrinter) {
-        StorageReference csvRef = FirebaseStorage.getInstance().getReference().child(siteName + ".csv");
+        StorageReference csvRef = FirebaseStorage.getInstance().getReference().child(siteName + "/grid.csv");
         File localFile = new File(getExternalFilesDir(null), "grid800.csv");
         csvRef.getFile(localFile)
                 .addOnSuccessListener(taskSnapshot -> {
@@ -405,8 +410,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void downloadFile(String path  , FileDownloadCallback callback){
-        StorageReference ref  = FirebaseStorage.getInstance().getReference().child(path);
+    private void downloadFile(String path  , FileDownloadCallback callback ){
+        StorageReference ref  = FirebaseStorage.getInstance().getReference().child( path);
         String randomFileName = UUID.randomUUID().toString();
         File localFile = new File(getExternalFilesDir(null) , randomFileName);
 

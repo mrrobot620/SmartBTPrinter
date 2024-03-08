@@ -1,14 +1,11 @@
 package com.mrrobot.smartbtprinter;
 
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import com.example.tscdll.TSCActivity;
-
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -16,7 +13,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -148,17 +144,18 @@ public class PrintPrn implements Runnable {
                     String sealID = regexFinder(varMap.get("sealID"), string2);
                     String casperID = regexFinder(varMap.get("casperID"), string2);
                     String seller_info = regexFinder(varMap.get("seller_info"), string2);
+                    Log.d("XXX" , "Seller Info is :" + seller_info);
                     String wildCard1 = regexFinder(varMap.get("wildCard1") , string2);
                     String wildCard2 = regexFinder(varMap.get("wildCard2") , string2);
                     String realGrid = gridMap.get(to);
 
                     if (!(bagId1.isEmpty())) {
                         Log.d("XXX" , "Template A");
-                        generatePrintCommand(bagTemplateA , to , from , date , shipmentCount , bagId1 , bagId2 , cDest , bagA , sealID , casperID , seller_info , wildCard1 , wildCard2 , realGrid );
+                        generatePrintCommand(bagTemplateA , from , to , date , shipmentCount , bagId1 , bagId2 , cDest , bagA , sealID , casperID , seller_info , wildCard1 , wildCard2 , realGrid );
                         new ApiRequestAsyncTask().execute(bagId1 , sealID , realGrid);
                     } else {
                         Log.d("XXX" , "Template B");
-                        generatePrintCommand(bagTemplateB , to , from , date , shipmentCount , bagId1 , bagId2 , cDest , bagA , sealID , casperID , seller_info , wildCard1 , wildCard2 , realGrid );
+                        generatePrintCommand(bagTemplateB , from , to , date , shipmentCount , bagId1 , bagId2 , cDest , bagA , sealID , casperID , seller_info , wildCard1 , wildCard2 , realGrid );
                         new ApiRequestAsyncTask().execute(bagId2, sealID , realGrid);
                     }
                 }
